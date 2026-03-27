@@ -3,13 +3,8 @@ name: Build and Push
 on:
   push:
     branches: [dev, staging, prod]
-    paths:
-      - 'src/**'
-      - 'Dockerfile'
-      - 'requirements.txt'
   pull_request:
     branches: [main]
-    paths: ['src/**', 'Dockerfile']
   workflow_dispatch:
     inputs:
       environment:
