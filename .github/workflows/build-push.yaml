@@ -64,6 +64,10 @@ jobs:
             --repository-names "${ECR_REPOSITORY_NAME}" \
             --query 'repositories[0].repositoryUri' \
             --output text)
+          if [ -z "$URI" ] || [ "$URI" = "None" ] || [ "$URI" = "null" ]; then
+            echo "ECR repository URI could not be resolved for ${ECR_REPOSITORY_NAME}" >&2
+            exit 1
+          fi
           echo "repo_uri=$URI" >> "$GITHUB_OUTPUT"
           echo "ECR_REPO_URI=$URI" >> "$GITHUB_ENV"
 
@@ -98,8 +102,11 @@ jobs:
           ENV_NAME="${{ needs.build.outputs.env_name }}"
           SHORT_SHA="${{ needs.build.outputs.sha_short }}"
           ECR_REPO_URI="${{ needs.build.outputs.ecr_repo_uri }}"
+          if [ -z "$ECR_REPO_URI" ]; then
+            echo "ECR_REPO_URI output is empty; refusing to write invalid image reference" >&2
+            exit 1
+          fi
 
-          # Keep the chart in sync with the latest image location and version.
           sed -i "s|^[[:space:]]*repository:.*$|  repository: ${ECR_REPO_URI}|" charts/sample-app/values-${ENV_NAME}.yaml
           sed -i "s|^[[:space:]]*tag:.*$|  tag: \"${ENV_NAME}-${SHORT_SHA}\"|" charts/sample-app/values-${ENV_NAME}.yaml
 
